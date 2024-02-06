@@ -13,6 +13,7 @@
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
@@ -42,4 +43,20 @@
 .read-the-docs {
   color: #888;
 }
+.x{
+  height: 300px;
+}
+.clicked{
+border: black solid 1px;
+background-color: #9a9898;
+}
 
+.hide{
+opacity: 0%;
+}
+
+.r{
+/* margin-left: 70%; */
+direction: rtl;
+display: inline-block;
+}

@@ -12,7 +12,7 @@ export const Profile = () => {
                 <hr className="featurette-divider" />
             <div className="row featurette">
                 <div className="order-md-2">
-                    <Fab className='icon' size="medium" aria-label="add">
+                    <Fab className='icon-profile' size="medium" aria-label="add">
                         <FaUserFriends />
                     </Fab>
                     <h5 className="featurette-heading fw-normal lh-1">מי אנחנו?</h5>
@@ -28,7 +28,7 @@ export const Profile = () => {
 
             <div className="row featurette">
                 <div className="order-md-2">
-                    <Fab className='icon' size="medium" aria-label="add">
+                    <Fab className='icon-profile' size="medium" aria-label="add">
                         <MdOutlineGppGood />
                     </Fab>
                     <h5 className="featurette-heading fw-normal lh-1">למה דווקא TalkBoard?</h5>
@@ -36,7 +36,7 @@ export const Profile = () => {
                         אנו, צוות TalkBoard פיתחנו בשבילכם את ההכי טוב שיש והפכנו את המערכת שלנו למובילה בשוק, והמועדפת ביותר (ע"פ סקר של מכון וייצמן בענייני תקשורת וחברה, מאי 2021).
                     </p>
                     <p className="lead">
-                        TalkBoard בלעדית בשוק המאפשרת להקים בבמה הציבורית פורומים דיסקרטיים שיחשפו רק למשתמשים \שהורשו ע"י מנהל הפורום.
+                        TalkBoard בלעדית בשוק המאפשרת להקים בבמה הציבורית פורומים דיסקרטיים שיחשפו רק למשתמשים שהורשו ע"י מנהל הפורום.
                     </p>
                     <p className="lead">
                         לכן- יש לנו חברות רבות ברשימת הלקוחות המרוצים שלנו שמאפשרים תקשורת משותפת לצוות החברה, הווי חברתי, ביקורת עובדים.                        </p>
@@ -46,7 +46,7 @@ export const Profile = () => {
 
             <div className="row featurette">
                 <div className="order-md-2">
-                    <Fab className='icon' size="medium" aria-label="add">
+                    <Fab className='icon-profile' size="medium" aria-label="add">
                         <RiTodoLine />
                         {/* BsListTask */}
                     </Fab>

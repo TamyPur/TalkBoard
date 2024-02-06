@@ -15,6 +15,8 @@ async function bootstrap() {
   .addTag('user')
   .addTag('forum')
   .addTag('message')
+  .addTag('customer')
+  .addTag('sendgrid')
   .addBearerAuth(
     { 
       // I was also testing it without prefix 'Bearer ' before the JWT

@@ -1,11 +1,13 @@
+import { TCategory } from "./category";
+
 export type TForum = {
-    _id:number;
-    id: number;
+    _id:string;
     admin: string;
-    issue: string;
+    subject: string;
     isPublic: Boolean;
-    lastEdited ?: Date;
+    lastEdited : Date;
     password: string;
     description: string;
     usersList: Array<string>;
+    categoriesList:Array<TCategory>
   };

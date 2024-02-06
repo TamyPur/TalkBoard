@@ -8,31 +8,65 @@ import Snackbar from '@mui/material/Snackbar';
 import IconButton from '@mui/material/IconButton';
 import CloseIcon from '@mui/icons-material/Close';
 import * as React from 'react';
+import { TForum } from "../interfaces/forum";
+import { useSelector } from "react-redux";
+import { UserState } from "../type";
+import { Avatar, Stack, Tooltip, TooltipProps, Typography, styled, tooltipClasses } from "@mui/material";
 
-export const Message = ({ _id, content, date, owner, deleted, forumId }: TMessage) => {
+interface props {
+    renderPage: () => void;
+    message: TMessage;
+}
 
+const HtmlTooltip = styled(({ className, ...props }: TooltipProps) => (
+    <Tooltip {...props} classes={{ popper: className }} />
+))(({ theme }) => ({
+    [`& .${tooltipClasses.tooltip}`]: {
+        backgroundColor: '#f5f5f9',
+        color: 'rgba(0, 0, 0, 0.87)',
+        maxWidth: 220,
+        fontSize: theme.typography.pxToRem(12),
+        border: '1px solid #dadde9',
+    },
+}));
+
+export const Message = ({ renderPage, message }: props) => {
+
+    const currentUser: TUser = useSelector(
+        (state: UserState) => state.currentUser
+    )
+    const token = Cookies.get('JwtToken');
     const apiUri = 'http://localhost:3000';
     const [user, setUser] = useState<TUser>();
     const [Sdate, setSDtae] = useState("");
-    const [currentUser, setCurrentUser] = useState<TUser>();
+    const [currentForum, setCurrentForum] = useState<TForum>();
     const [open, setOpen] = useState(false);
 
     useEffect(() => {
-        const token = Cookies.get('JwtToken');
-        axios.get(`${apiUri}/user/${owner}`)
-            .then(res => setUser(res.data))
-            .catch(err => alert(err))
-
-        axios.get(`${apiUri}/user/getCurrentUser`, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-            }
-        }
-        ).then(res => setCurrentUser(res.data))
-            .catch(err => alert(err))
-
+        getOwner()
+        getForum()
         getDate();
     }, [])
+
+    const getOwner = () => {
+        axios.get(`${apiUri}/user/${message.owner}`)
+            .then(res => setUser(res.data))
+            .catch(err => console.log(err))
+    }
+
+    const getForum = () => {
+        axios.get(`${apiUri}/forum/${message.forumId}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    Accept: 'application/json'
+                }
+            }
+        )
+            .then((res) => setCurrentForum(res.data))
+            .catch((err) => console.log(err))
+    }
+
 
     const handleClick = () => {
         setOpen(true);
@@ -64,7 +98,7 @@ export const Message = ({ _id, content, date, owner, deleted, forumId }: TMessag
     }
 
     const getDate = () => {
-        const d: Date = new Date(date);
+        const d: Date = new Date(message.date);
         const tooday = new Date();
         const day = d.getDate()
         const month = d.getMonth() + 1;
@@ -80,34 +114,36 @@ export const Message = ({ _id, content, date, owner, deleted, forumId }: TMessag
 
     const deleteMessage = () => {
         const token = Cookies.get('JwtToken');
-        axios.post(`${apiUri}/message/${_id}`,
+        axios.post(`${apiUri}/message/${message._id}`,
             {
-                id: _id
+                id: message._id
             }, {
             headers: {
                 Authorization: `Bearer ${token}`,
             }
         }
-        ).then(() => {handleClick(); updateDate();})
-            .catch(err => alert(err))
+        ).then(() => { handleClick(); updateDate(); })
+            .catch(err => console.log(err))
+        renderPage();
     }
 
     const updateDate = () => {
         const token = Cookies.get('JwtToken');
-        axios.post(`${apiUri}/forum/${forumId}`,
+        axios.put(`${apiUri}/forum/updateDate/${message.forumId}`,
             {
-                forumId: forumId
+                forumId: message.forumId
             }, {
             headers: {
                 Authorization: `Bearer ${token}`,
             }
         }
 
-        ).then(() =>{})
-            .catch(error => alert(error))
+        ).then(() => { })
+            .catch(error => console.log(error))
     }
+
     return (<>
-        {deleted ? (
+        {message.deleted ? (
             <div className="list-group-item">
                 <div className="d-flex w-100 justify-content-between">
                     <p className="mb-1"></p>
@@ -121,16 +157,32 @@ export const Message = ({ _id, content, date, owner, deleted, forumId }: TMessag
         ) : (
             <div className="list-group-item">
                 <div className="d-flex w-100 justify-content-between">
-                    <p className="mb-1"><strong>{user?.name}</strong></p>
+                    <HtmlTooltip
+                        title={
+                            <React.Fragment>
+                                <Typography color="inherit">{user?.name}</Typography>
+                                {user?.occupation}<br />
+                                {user?.email} | {user?.phoneNumber}<br />
+                                {user?.address}<br />
+                            </React.Fragment>
+                        }
+                    >
+                        <Stack direction="row" spacing={2} className="mb-1">
+                            <Avatar alt={user?.name} src={`${apiUri}/files/${user?.profilePicture}`} sx={{ width: 25, height: 25 }} />
+                          <strong> {user?.name} </strong>  
+                        </Stack>
+                    </HtmlTooltip>
                     <small>{Sdate}</small>
                 </div>
                 <div className="d-flex w-100 justify-content-between">
-                    <p className="mb-1 text-break">{content}</p>
-                   {currentUser?._id==owner?(
-                     <button onClick={deleteMessage}><AiFillDelete /></button>
-                   ):(
-                    <></>
-                   )}
+                    <p className="mb-1 text-break" dangerouslySetInnerHTML={{ __html: message.content }}></p>
+                    {currentUser?._id == message.owner || currentUser?._id == currentForum?.admin ? (
+                        <IconButton onClick={deleteMessage} aria-label="deleteMessage" size="small">
+                            <AiFillDelete />
+                        </IconButton>
+                    ) : (
+                        <></>
+                    )}
                 </div>
             </div>
         )}

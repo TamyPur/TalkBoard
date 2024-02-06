@@ -1,29 +1,56 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { UserController } from './user/user.controller';
-import { UserService } from './user/user.service';
 import { UserModule } from './user/user.module';
-import { JwtModule, JwtService } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
-import { User, UserSchema } from './schemas/user.schema';
-import { jwtConstants } from './user/constants';
 import { ForumModule } from './forum/forum.module';
-import { ForumController } from './forum/forum.controller';
-import { ForumService } from './forum/forum.service';
-import { ForumSchema } from './schemas/forum.schema';
 import { MessageModule } from './message/message.module';
-import { MessageController } from './message/message.controller';
-import { MessageService } from './message/message.service';
-import {MessageSchema} from './schemas/message.schema'
-
+import { CategoryModule } from './category/category.module';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { PugAdapter } from '@nestjs-modules/mailer/dist/adapters/pug.adapter';
+import { MailController } from './mail/mail.controller';
+import { MailService } from './mail/mail.service';
+import { MailModule } from './mail/mail.module';
+import { FilesModule } from './files/files.module';
+import { CustomerModule } from './customer/customer.module';
 
 @Module({
-  imports: [UserModule,ForumModule ,MongooseModule.forRoot('mongodb://localhost/TalkBorddb'),
-  MongooseModule.forFeature([{name: 'User', schema: UserSchema},{name: 'Forum', schema: ForumSchema},{name: 'Message', schema: MessageSchema}]),
-  MessageModule, 
+  imports: [UserModule,ForumModule ,MongooseModule.forRoot('mongodb://localhost/TalkBoarddb'),
+  MessageModule,
+  CategoryModule,
+  MailModule, 
+  FilesModule,
+   CustomerModule,
+  MailerModule.forRoot({
+    transport: {
+      service:"Gmail",
+      host: 'localhost',
+      port: 1080,
+      ignoreTLS: true,
+      secure: false,
+      auth: {
+        user: 'talkboard434@gmail.com',
+        pass: 'wdrn ibza doyb rgfe',
+      },
+      tls: {
+        rejectUnauthorized: false
+    }
+    },
+    
+    defaults: {
+      from: '"No Reply" <no-reply@localhost>',
+    },
+    // preview: true,
+    template: {
+      dir: process.cwd() + '/template/',
+      adapter: new PugAdapter(), // or new PugAdapter() or new EjsAdapter()
+      options: {
+        strict: true,
+      },
+    },
+  }),
 ],
-  controllers: [AppController,UserController,ForumController,MessageController],
-  providers: [JwtService,AppService,UserService,ForumService,MessageService],
+  controllers: [AppController, MailController],
+  providers: [AppService, MailService]
 })
 export class AppModule {}
