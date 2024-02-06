@@ -15,6 +15,13 @@ export class MessageController {
 
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.User)
+  @Get()
+  getAll(): Promise<any> {
+    return this.messageService.getAll();
+  }
+
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.User)
   @Get(':forumId')
   getByForum(@Param('forumId') forumId: ObjectId): Promise<any> {
     return this.messageService.getByForum(forumId);

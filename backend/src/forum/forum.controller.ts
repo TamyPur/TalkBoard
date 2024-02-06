@@ -28,7 +28,8 @@ export class ForumController {
   }
 
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.User)
   @Get()
   getAll(): Promise<Forum[]> {
     return this.forumService.getAll();
@@ -54,7 +55,8 @@ export class ForumController {
   }
   @UseGuards(AuthGuard, RolesGuard)
   @Roles(Role.User)
-  @Post(':forumId')
+  //שינינו post ל put
+  @Put('updateDate/:forumId')
   updateDate(@Param('forumId') forumId: ObjectId): Promise<any> {
     return this.forumService.updateDate(forumId);
   }

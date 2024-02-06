@@ -1,7 +1,7 @@
 export type TMessage = {
-    _id:Object;
+    _id:string;
     id: number;
-    forumId: number;
+    forumId: string;
     owner: number;
     content: String;
     date: Date;

@@ -1,17 +1,32 @@
-import { Body, Controller, Get, Param, Post, Headers } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Headers, Put, UseGuards, UseInterceptors, UploadedFile } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from 'src/schemas/user.schema';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBody, ApiConsumes, ApiTags } from '@nestjs/swagger';
 import { response } from 'express';
+import { RolesGuard } from 'src/roles.guard';
+import { AuthGuard } from 'src/auth.guard';
+import { Roles } from 'src/roles.decorator';
+import { Role } from 'src/role.enum';
+import { ObjectId } from 'mongoose';
+import { FileInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('user')
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) { }
 
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.SystemAdmin)
   @Get()
   getAll(): Promise<any> {
     return this.userService.getAll();
+  }
+
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.User)
+  @Get('getSystemAdmin')
+  getSystemAdmin(): Promise<User> {
+    return this.userService.getSystemAdmin()
   }
 
   @Get('getCurrentUser')
@@ -20,7 +35,7 @@ export class UserController {
   }
 
   @Get(':id')
-  getUserById(@Param('id') id: number): any {
+  getUserById(@Param('id') id: string): any {
     return this.userService.getUserById(id);
   }
 
@@ -31,17 +46,54 @@ export class UserController {
 
   @Post('signUp')
   signUp(@Body() user: User): Promise<any> {
-    try {      
+    try {
       return this.userService.signUp(user);
-    } catch (e) {      
+    } catch (e) {
       response.status(e.status).json(e.message)
+    }
   }
-   }
 
 
   @Post('signIn')
   signIn(@Body() user: User): Promise<any> {
     return this.userService.signIn(user);
+  }
+
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.User)
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        // customer: {
+        //   type: 'object',
+        //   format: 'Customer',
+        // },
+        file: {
+          type: 'string',
+          format: 'binary',
+        }
+      },
+    },
+  })
+  @UseInterceptors(FileInterceptor('file'))
+  @Put(':id')
+  update(@Param('id') id: ObjectId, @Body() user: User, @Headers('Authorization') auth: string, @UploadedFile() image: Express.Multer.File) {
+    return this.userService.update(id, user, auth, image);
+  }
+
+  @UseGuards(AuthGuard, RolesGuard)
+  @Roles(Role.SystemAdmin)
+  @Put('delete/:id')
+  delete(@Param('id') id: ObjectId) {
+    return this.userService.delete(id);
+  }
+
+
+  @Post('forgetPassword')
+  forgetPassword(@Body() user: User): Promise<any> {
+    return this.userService.forgetPassword(user);
   }
 }
 
