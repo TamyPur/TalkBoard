@@ -98,7 +98,7 @@ export const SetForum = () => {
                 }
             }
         )
-            .then(res => setCategories(res.data.sort((a: { name: string; },b: { name: string; })=>a.name > b.name ? 1 : -1)))
+            .then(res => setCategories(res.data.sort((a: { name: string; }, b: { name: string; }) => a.name > b.name ? 1 : -1)))
             .catch(error => console.log(error))
     }
 

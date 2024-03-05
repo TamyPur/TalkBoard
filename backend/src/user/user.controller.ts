@@ -9,6 +9,7 @@ import { Roles } from 'src/roles.decorator';
 import { Role } from 'src/role.enum';
 import { ObjectId } from 'mongoose';
 import { FileInterceptor } from '@nestjs/platform-express';
+import { error } from 'console';
 
 @ApiTags('user')
 @Controller('user')
@@ -80,7 +81,13 @@ export class UserController {
   @UseInterceptors(FileInterceptor('file'))
   @Put(':id')
   update(@Param('id') id: ObjectId, @Body() user: User, @Headers('Authorization') auth: string, @UploadedFile() image: Express.Multer.File) {
-    return this.userService.update(id, user, auth, image);
+    try {
+      return this.userService.update(id, user, auth, image);
+    }
+    catch (err) {
+      throw new Error(err)
+    }
+
   }
 
   @UseGuards(AuthGuard, RolesGuard)

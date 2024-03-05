@@ -188,7 +188,7 @@ export const Message = ({ renderPage, message }: props) => {
         )}
         <Snackbar
             open={open}
-            autoHideDuration={6000}
+            autoHideDuration={4000}
             onClose={handleClose}
             message="ההודעה נמחקה בהצלחה"
             action={action}

@@ -20,7 +20,7 @@ import { TUser } from '../interfaces/user';
 import { UserState } from '../type';
 import { useSelector } from 'react-redux';
 import { Button } from 'react-bootstrap';
-import { Avatar, IconButton } from '@mui/material';
+import { Avatar, Backdrop, CircularProgress, IconButton } from '@mui/material';
 
 
 export const Account = () => {
@@ -36,6 +36,23 @@ export const Account = () => {
     const [customer, setCustomer] = useState({ _id: "", name: "", description: "" });
     const [user, setUser] = useState(currentUser);
     const [showCustomerForm, setShowCustomerForm] = useState(false);
+    const [validation, setValidation] = useState("valid");
+    const [open, setOpen] = useState(false);
+
+
+    const delay = (ms: number | undefined) => new Promise(res => setTimeout(res, ms));
+
+  const handleOpen = async () => {
+        setOpen(true);
+        await delay(3000);
+        handleClose()
+    };
+
+    const handleClose = () => {
+        setOpen(false);
+    };
+  
+    const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
 
     const apiUri = 'http://localhost:3000';
     const token = Cookies.get('JwtToken');
@@ -96,20 +113,35 @@ export const Account = () => {
         return formData;
     }
 
-    const updateUser = () => {
-        if (!(user.phoneNumber.match('[0-9]{10}')))
-            console.log('Please provide valid phone number');
-        const formData = objectToFormData(user);
-        formData.append("file", profilePicture);
-        axios.put(`${apiUri}/user/${currentUser._id}`, formData, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'multipart/form-data',
-                Accept: 'application/json',
+    const updateUser = (e: { preventDefault: () => void; }) => {
+        e.preventDefault();
+        if (checkValidate()) {
+            const formData = objectToFormData(user);
+            formData.append("file", profilePicture);
+            axios.put(`${apiUri}/user/${currentUser._id}`, formData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data',
+                    Accept: 'application/json',
+                }
             }
+            ).then((data) => { console.log(data); handleOpen()})
+                .catch((err) => { console.log(err) })
         }
-        ).then((data) => {console.log(data) })
-            .catch((err) => { console.log(err) })
+    }
+
+    const checkValidate = () => {
+        debugger
+        if (!(user.phoneNumber.match('[0-9]{10}'))) {
+            setValidation("phon");
+            return false;
+        }
+        if (!emailRegex.test(user.email)) {
+            setValidation("email")
+            return false;
+        }
+        setValidation("valid")
+        return true;
     }
 
     const customerSubmit = () => {
@@ -131,6 +163,16 @@ export const Account = () => {
             .catch((err) => { console.log(err) })
     }
 
+    const showNote = () => {
+        let content = [];
+        if (validation == "valid")
+            content.push(<small>פרטים אלו יהיו גלויים לכל משתמשי המערכת</small>)
+        if (validation == "phon")
+            content.push(<small className='error'>מס' פלאפון לא חוקי</small>)
+        if (validation == "email")
+            content.push(<small className='error'>כתובת אימייל לא חוקית</small>)
+        return content;
+    }
 
     return (
         <div id='account-form' className='account-form scroll'>
@@ -139,9 +181,15 @@ export const Account = () => {
                     <IconButton sx={{ p: 0 }}>
                         <Avatar sx={{ width: 65, height: 65 }} alt={user.name} src={`${apiUri}/files/${currentUser.profilePicture}`} />
                     </IconButton>
+                    <Backdrop
+                        sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}
+                        open={open}
+                        onClick={handleClose}
+                    >
+                        <CircularProgress color="inherit" />
+                    </Backdrop>
+
                     <br />
-
-
                     <TextField
                         id="input-with-icon-textfield"
                         label="שם"
@@ -237,7 +285,8 @@ export const Account = () => {
                             </div>
                         </div>
                     </div>
-                    <small>פרטים אלו יהיו גלויים לכל משתמשי המערכת</small>
+                    {showNote()}
+                    <br />
                     <Button className='submit short-submit' variant="primary" type='submit'>
                         עדכון פרטים
                     </Button>
@@ -246,7 +295,7 @@ export const Account = () => {
 
                 <p>
                     <h4 >בעל עסק?</h4>
-                    <small>קבל פירסום אטרקטיבי</small><br/>
+                    <small>קבל פירסום אטרקטיבי</small><br />
                     {showCustomerForm ? (<a href='#customer'><KeyboardArrowUpIcon onClick={() => setShowCustomerForm(!showCustomerForm)} /></a>) : (<a href='#account-form'><KeyboardArrowDownIcon onClick={() => setShowCustomerForm(!showCustomerForm)} /> </a>)}
                 </p>
 

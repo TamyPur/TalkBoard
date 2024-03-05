@@ -39,20 +39,23 @@ export class UserService {
 
   async signUp(user: User): Promise<any> {
     const u1 = await this.userModel.findOne({ password: user.password })
-    if (!u1 == undefined)
+    if (!(u1 == undefined)){
       throw new ConflictException('User with this password already exists');
-    const u2 = await this.userModel.findOne({ email: user.email })
-    if (u2 == undefined) {
-      const newUser = await new this.userModel(user);
-      newUser.save();
-      return this.signIn(user);
     }
+    else {
+      const u2 = await this.userModel.findOne({ email: user.email })
+      if (u2 == undefined) {
+        const newUser = await new this.userModel(user);
+        newUser.save();
+        return this.signIn(user);
+      }
 
-    if ((await u2).name == user.name) {
-      if ((await u2).password == user.password)
-        throw new ConflictException('User already exists');
+      if ((await u2).name == user.name) {
+        if ((await u2).password == user.password)
+          throw new ConflictException('User already exists');
+      }
+      throw new ConflictException('User with this email already exists');
     }
-    throw new ConflictException('User with this email already exists');
   }
 
   async signIn(user: User): Promise<any> {
@@ -67,7 +70,6 @@ export class UserService {
       newUser.needDeletePassword = false;
       Object.assign(u, newUser);
       const updatedUser = await u.save();
-
     }
     const u1 = await this.userModel.findById(u._id)
     let payload = { username: u1.name, password: u1.password, roles: ['user'] };
@@ -93,10 +95,14 @@ export class UserService {
       user.profilePicture = u.profilePicture
 
     }
-    Object.assign(u, user);
-    const updatedUser = await u.save();
-    return this.signIn(u)
-    // return updatedUser;
+    try {
+      Object.assign(u, user);
+      const updatedUser = await u.save();
+      return this.signIn(u)
+    }
+    catch (err) {
+      throw new Error(err)
+    }
   }
 
   async delete(id: ObjectId): Promise<User> {
@@ -144,7 +150,5 @@ export class UserService {
     Object.assign(u, user);
     const updatedUser = await u.save();
     return updatedUser;
-
   }
-
 }

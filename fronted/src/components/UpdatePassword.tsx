@@ -4,7 +4,7 @@ import { UserState } from "../type"
 import axios from "axios"
 import Cookies from 'js-cookie';
 import { Box, Button, TextField } from "@mui/material"
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 
 export const UpdatePassword = () => {
@@ -16,14 +16,19 @@ export const UpdatePassword = () => {
     const apiUri = 'http://localhost:3000';
     const token = Cookies.get('JwtToken');
 
-    const [correctPassword, setCorrectPassword] = useState(false)
+    const [steps, setSteps] = useState(1)
     const [tempPassword, setTempPassword] = useState("")
     const [newPassword, setNewPassword] = useState("")
+    const [invalidPassword, setInvalidPassword] = useState(false)
+
+    useEffect(() => {
+        setInvalidPassword(false)
+    }, [steps])
 
 
     const checkPassword = () => {
         if (tempPassword == currentUser.tempPassword)
-            setCorrectPassword(true)
+            setSteps(2)
     }
 
     const objectToFormData = (obj: Object) => {
@@ -37,20 +42,59 @@ export const UpdatePassword = () => {
     const FupdateUser = () => {
         const user: TUser = currentUser;
         user.password = newPassword;
-        const formData = objectToFormData(user);
-        axios.put(`${apiUri}/user/${currentUser._id}`, formData, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'multipart/form-data',
-                Accept: 'application/json',
+        if (user.password.length >= 8) {
+            const formData = objectToFormData(user);
+            axios.put(`${apiUri}/user/${currentUser._id}`, formData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data',
+                    Accept: 'application/json',
+                }
             }
+            ).then((data) => {
+                Cookies.set('JwtToken', data.data, { expires: 7 })
+                console.log(data);
+                setNewPassword("");
+                setSteps(3)
+            })
+                .catch(() => setInvalidPassword(true))
         }
-        ).then((data) => {
-            Cookies.set('JwtToken', data.data, { expires: 7 })
-            console.log(data);
-            setNewPassword("");
-        })
-            .catch((err) => { console.log(err) })
+        else{
+            setInvalidPassword(true)
+        }
+    }
+
+    const showContent = () => {
+        let content = []
+        if (steps == 1) {
+            content.push(<label>יש להזדהות באמצעות הסיסמה שנשלחה אליך לתיבת האימייל</label>)
+            content.push(<br />)
+            content.push(<TextField
+                name='tempPassword'
+                onChange={(event) => setTempPassword(event.target.value)}
+                value={tempPassword}
+                sx={{ "width": "90%" }}
+            />)
+            content.push(<br />)
+            content.push(<Button className='outline-button' type='submit' onClick={checkPassword} sx={{ "width": "90%" }}>
+                המשך
+            </Button>)
+        }
+        if (steps == 2) {
+            content.push(<label>בחר/י סיסמה חדשה</label>)
+            content.push(<br />)
+            content.push(<TextField
+                name='newPassword'
+                onChange={(event) => setNewPassword(event.target.value)}
+                value={newPassword}
+                sx={{ "width": "90%" }}
+            />)
+            content.push(<br />)
+            content.push(<Button className='outline-button' type='submit' onClick={FupdateUser} sx={{ "width": "90%" }}> עדכון סיסמה</Button>)
+        }
+        if (steps == 3)
+            content.push(<p>סיסמתך עודכנה בהצלחה, תודה על שיתוף הפעולה!</p>)
+        return content;
     }
 
     return (
@@ -58,31 +102,8 @@ export const UpdatePassword = () => {
             <Box sx={{ '& > :not(style)': { m: 1 } }}>
                 <br />
                 <h4>עדכון סיסמה</h4>
-                {correctPassword ? (<>
-                    <label>בחר/י סיסמה חדשה</label><br />
-                    <TextField
-                        name='newPassword'
-                        onChange={(event) => setNewPassword(event.target.value)}
-                        value={newPassword}
-                        sx={{ "width": "90%" }}
-                    />
-                    <br />
-                    <Button className='outline-button' type='submit' onClick={FupdateUser} sx={{ "width": "90%" }}>
-                        עדכון סיסמה
-                    </Button>
-                </>) : (<>
-                    <label>יש להזדהות באמצעות הסיסמה שנשלחה אליך לתיבת האימייל</label><br />
-                    <TextField
-                        name='tempPassword'
-                        onChange={(event) => setTempPassword(event.target.value)}
-                        value={tempPassword}
-                        sx={{ "width": "90%" }}
-                    />
-                    <br />
-                    <Button className='outline-button' type='submit' onClick={checkPassword} sx={{ "width": "90%" }}>
-                        המשך
-                    </Button>
-                </>)}
+                {showContent()}
+                {invalidPassword ? (<small className="error center">סיסמה לא חוקית</small>) : (<></>)}
             </Box>
         </div>
     )
